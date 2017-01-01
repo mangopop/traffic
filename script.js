@@ -25,6 +25,8 @@ Car.prototype.update = function () {
 
   ctx.fillStyle = "rgb(200,0,0)";
   ctx.fillRect(this.startPos, 20, 10, 5);
+
+  //should kill this car
 };
 
 //create 100 car array
