@@ -13,93 +13,92 @@ function getRandomIntInclusive(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function Car(x,y,vx, colour) {
-    this.speed = getRandomIntInclusive(1, 5);
-    this.colour = colour;
-    this.startPos = getRandomIntInclusive(800, 3000); //not best way of doing this
-    // this.delay = 10;
+// build a one off 200 car array
+// timeout doesn't seem to make a difference here.
+function initCars() {
+    for (var i = 0; i < 20; i++) {
+        setTimeout(createCar, 1000, i);
+        // createCar(i);
+    }
+}
 
-    this.update = function() {
-        x += vx;
+function Car(x, y, vx, delay, colour) {
+    this.delay = delay;
+    this.x = x;
+    this.vx = vx;
+    this.copyVX = vx;
+
+    this.move = function() {
+      // console.log('move');
+        this.x += this.vx;
+        if (this.x > 800) this.x = 0;
+    }
+
+    // will slow down by decreasing vx down to .5
+    this.slow = function() {
+        if (this.vx >= .1) {
+            // console.log('slowin '+this.vx);
+            this.vx = this.vx - .1;
+        }
+    }
+
+    this.stop = function() {
+        this.vx = 0;
+    }
+
+    this.accelerate = function() {
+        //dont go faster than original speed
+        if (this.vx < this.copyVX) {
+            // console.log('speedin up  '+this.vx);
+            this.vx = this.vx + .1;
+        }
     }
 
     this.draw = function() {
         ctx.fillStyle = colour;
-        ctx.fillRect(x, y, 10, 5);
-    }
-}
-
-function initCars() {
-    for (var i = 0; i < 200; i++) {
-        setTimeout(createCar, 20 * i, i);
+        ctx.fillRect(this.x, y, 10, 5);
     }
 }
 
 function createCar(i) {
     // initial position in middle of canvas
-    var x = 800;
+    var x = 0;
     var y = 0;
-    // randomize the vx and vy a little - but we still want them flying 'up' and 'out'
-    var vx = -2 + Math.random() * 4;
+    var delay = getRandomIntInclusive(1, 2000);
+    var vx = 3 + Math.random() * 2;
     // var vy = Math.random() * -3;
-    // randomize size and opacity a little & pick a color from our color palette
-    // var size = 5 + Math.random() * 5;
     var colour = colours[i % colours.length];
-    // var opacity = 0.5 + Math.random() * 0.5;
-    var p = new Car(x, 20, vx, colour);
+    var p = new Car(x, 20, vx, delay, colour);
     cars.push(p);
 }
 
+// this is essentially checking each object, applying an update, if anything changes then we animate
 function render() {
     ctx.clearRect(0, 0, width, height);
     for (var i = 0; i < cars.length; i++) {
-        cars[i].update();
-        cars[i].draw();
+        // check all x positions and slow down the car if there is one in front
+        for (var j = 0; j < cars.length; j++) {
+            // check range and slow down, break out otherwise will accel onchecking other cars
+            if ((cars[j].x - cars[i].x) < 50 && (cars[j].x - cars[i].x) > 20) {
+                cars[i].slow();
+                break;
+            } else {
+                cars[i].accelerate();
+            }
+        }
+        // delay the car by creating count down delay
+        if (cars[i].delay <= 0) {
+            cars[i].move();
+            cars[i].draw();
+        } else {
+            cars[i].delay--;
+        }
+        // console.log(cars[i]);
     }
+
     requestAnimationFrame(render);
 }
 
 // init
 initCars();
 render();
-
-// Car.prototype.update = function () {
-
-//   this.startPos -= this.speed;
-
-//   ctx.fillStyle = "rgb(200,0,0)";
-//   ctx.fillRect(this.startPos, 20, 10, 5);
-
-//   //should kill this car
-// };
-
-// //create 100 car array
-// function drawCars() {
-//   for (var i = 0; i < 100; i++) {
-//     var car = new Car();
-//     cars.push(car);
-//   }
-//   draw();
-// }
-
-// drawCars();
-
-// //go through each car and update
-// function draw() {
-
-//   ctx.clearRect(0, 0, 800, 800);
-//   // road
-//   ctx.fillStyle = "rgb(200,200,200)";
-//   ctx.fillRect(0, 10, 800, 50);
-
-//   //road line
-//   ctx.fillStyle = "rgb(250,250,250)";
-//   ctx.fillRect(0, 35, 800, 1);
-
-//   //go through each car and start to update for every frame
-//   for (var i = 0; i < cars.length; i++) {
-//     var myCar = cars[i];
-//     myCar.update();
-//   }
-//   requestAnimationFrame(draw);
-// }
